@@ -4,7 +4,9 @@
 export AADB=/Users/zongjingyao/Tools/MyTools/aadb
 export PATH=$AADB:$PATH
 alias aadb='aadb.py'
+```
 
+示例
 ```Bash
 MyTools git:(master) ✗ aadb shell
 1f588x50
