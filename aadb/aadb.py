@@ -46,7 +46,7 @@ def main(argv):
     
     output_devices(devices)
     while True:
-        tmp = str(input())
+        tmp = raw_input()
         tmp_devices = []
         for device in devices:
             if device.startswith(tmp):
