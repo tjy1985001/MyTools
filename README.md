@@ -12,3 +12,6 @@ AutoHotKey脚本，收录了几个常用的快捷键
 
 ## GitJira
 一个简单的SourceTree外部工具，可以根据Git的commit log中的jira issue号直接跳转到相应的Jira页面。
+
+## TinyPNG
+一个使用TinyPNG官方Python库压缩图片的脚本
