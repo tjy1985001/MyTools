@@ -1,11 +1,11 @@
 # MyTools
-自己用到的和自己写的一些小工具
+Some tools I'm using and written by me.
 
 ## aadb
-一个可以直接选择目标设备的adb命令
+An advanced adb cmd which supports to select target device directly.
 
 ## AutoHotKey
-AutoHotKey脚本，收录了几个常用的快捷键
+AutoHotKey scripts，including some frequently-used shortcut key.
 
 ## MakeGif
 将一整张图的序列帧合成gif图片的Python脚本
