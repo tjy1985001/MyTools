@@ -1,69 +1,79 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
+'''
+When multiple Android devices are connected to computer,
+you must execute 'adb devices' to get device serial numbers and use '-s' to specify a device.
+aadb could list all connected Android device serial numbers.
+You just need to input a prefix of any serial number and press enter key.
+'''
 
-import sys, os
+import sys
+import os
 
 
 def exe_cmd(cmd):
+    'execute a cmd'
     ret = os.popen(cmd)
     text = ret.read()
     ret.close()
     return text
 
+
 def get_devices():
-    ret = exe_cmd('adb devices')
-    lines = ret.split('\n')
-    devices = [];
-    for i in range(1, len(lines)):
-        if len(lines[i]) > 0:
-            parts = lines[i].split('\t');
-            devices.append(parts[0])
+    'get all connected devices'
+    lines = exe_cmd('adb devices').split('\n')
+    devices = []
+    for line in lines[1:]:
+        if line:
+            devices.append(line.split('\t')[0])
     return devices
 
+
 def output_devices(devices):
+    'output all connected devices'
     for device in devices:
         print device
 
-def exe_adb(args, sys_argv):
-    cmd = 'adb'
-    if args != None and len(args) > 0:
-        for arg in args:
-            cmd = cmd + ' ' + arg
-    
-    for i in range(1, len(sys_argv)):
-        cmd = cmd + ' ' + sys_argv[i]
 
+def exe_adb(args, sys_argv):
+    'execute adb cmd'
+    cmd = ''
+    if args:
+        cmd += ' '.join(args)
+    if sys_argv:
+        cmd += ' ' + ' '.join(sys_argv)
+    cmd = 'adb ' + cmd
     # print cmd
     os.system(cmd)
 
+
 def main(argv):
-    if len(argv) <= 1 : return
+    'main function'
+    if not argv:
+        return
 
     devices = get_devices()
     if len(devices) <= 1:
         exe_adb(None, argv)
         return
-    
+
     output_devices(devices)
     while True:
-        tmp = raw_input()
-        tmp_devices = []
-        for device in devices:
-            if device.startswith(tmp):
-                tmp_devices.append(device)
-                break
-        
-        if len(tmp_devices) > 1:
-            output_devices(tmp_devices)
-        elif len(tmp_devices) == 1:
+        prefix = raw_input()
+        tmp_devices = [
+            device for device in devices if device.startswith(prefix)
+        ]
+        device_num = len(tmp_devices)
+
+        if device_num == 1:
             exe_adb(['-s ' + tmp_devices[0]], argv)
             break
         else:
             output_devices(devices)
 
+
 if __name__ == '__main__':
     try:
-        main(sys.argv)
-    except:
-        pass
-    
+        main(sys.argv[1:])
+    except Exception, ex:
+        print ex
