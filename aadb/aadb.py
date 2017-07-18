@@ -10,6 +10,10 @@ You just need to input a prefix of any serial number and press enter key.
 import sys
 import os
 
+WHILE_LIST_ARGS = [
+    'devices', 'start-server', 'kill-server', 'version', 'help', '-h'
+]  #some args don't work on specific device, execute cmd directly.
+
 
 def exe_cmd(cmd):
     'execute a cmd'
@@ -53,7 +57,7 @@ def main(argv):
         return
 
     devices = get_devices()
-    if len(devices) <= 1:
+    if len(devices) <= 1 or argv[0] in WHILE_LIST_ARGS:
         exe_adb(None, argv)
         return
 
