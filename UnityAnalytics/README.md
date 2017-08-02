@@ -21,3 +21,6 @@ ua.py -android apk_path
 ```Bash
 ua.py -ios exported_ios_project_path
 ```
+
+# AnalyticsCheck.cs
+A script to notice you in Editor if Analytics is not enabled.
