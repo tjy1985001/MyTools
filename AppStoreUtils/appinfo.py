@@ -46,3 +46,11 @@ class AppInfo(object):
     def output_info(self):
         'output detailed info'
         print json.dumps(self.__dict__, indent=4, ensure_ascii=False)
+
+    def __eq__(self, other):
+        for key, value in self.__dict__.items():
+            if other.__dict__.has_key(key) and other.__dict__[key] == value:
+                continue
+            else:
+                return False
+        return True
