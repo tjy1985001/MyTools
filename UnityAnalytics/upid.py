@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding:utf-8 -*-
-'extract UPID from apk'
+'extract UPID from apk and ipa'
 
 import sys
 import os
@@ -8,15 +8,19 @@ import shutil
 import re
 import zipfile
 
+IPA_SUFFIX = '.ipa'
+APK_SUFFIX = '.apk'
 
-def get_upid(apk):
-    if not apk.endswith('.apk') or not os.path.isfile(apk):
+
+def get_upid(target):
+    if not (target.endswith(IPA_SUFFIX) or target.endswith(APK_SUFFIX)) \
+        or not os.path.isfile(target):
         return (None, None, None, 'invalid input')
-    apk_name = os.path.basename(apk)
+    file_name = os.path.basename(target)
     tmp_dir = 'temp'
     if not os.path.exists(tmp_dir):
         os.makedirs(tmp_dir)
-    zip_file = zipfile.ZipFile(apk)
+    zip_file = zipfile.ZipFile(target)
     binary = None
     for tmp in zip_file.namelist():
         if tmp.endswith('globalgamemanagers') or tmp.endswith('mainData'):
@@ -30,14 +34,14 @@ def get_upid(apk):
             read_len = 10
             break
     if not binary:
-        return (apk_name, None, None, 'cannot find target binary file')
+        return (file_name, None, None, 'cannot find target binary file')
     binary = zip_file.extract(binary, tmp_dir)
     data = open(binary, 'rb')
     data.seek(seek_index)
     version = data.read(read_len)
     main_version = float(version[0:-4])
     upid = None
-    errmsg = None
+    errmsg = ''
     if main_version < 5.2:
         errmsg = 'not support'
     else:
@@ -47,23 +51,25 @@ def get_upid(apk):
             if ret:
                 upid = ret.group(0)
                 break
+    if not upid:
+        errmsg = 'cannot find upid'
     zip_file.close()
     data.close()
     if os.path.exists(tmp_dir):
         shutil.rmtree(tmp_dir)
-    return (apk_name, version, upid, errmsg)
+    return (file_name, version, upid, errmsg)
 
 
 def get_upids(dir_path):
     if not os.path.isdir(dir_path):
         return None
     return [
-        get_upid(apk)
-        for apk in [
+        get_upid(target)
+        for target in [
             os.path.join(dir_path, file_name)
             for file_name in os.listdir(dir_path)
             if os.path.isfile(os.path.join(dir_path, file_name)) and
-            file_name.endswith('.apk')
+            (file_name.endswith(IPA_SUFFIX) or file_name.endswith(APK_SUFFIX))
         ]
     ]
 
