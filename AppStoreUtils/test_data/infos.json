@@ -1,0 +1,26 @@
+[
+    {
+        "app_name": "倩女幽魂-零门槛全民争霸赛", 
+        "release_date": "2016-05-12 00:27:39", 
+        "current_version_release_date": "2017-07-19 23:01:01", 
+        "app_id": 1033387365, 
+        "version": "1.1.0", 
+        "bundle_id": "com.netease.qnyh"
+    }, 
+    {
+        "app_name": "疯狂动物园-一周年版本", 
+        "release_date": "2016-06-22 14:15:44", 
+        "current_version_release_date": "2017-08-04 03:48:30", 
+        "app_id": 1047961826, 
+        "version": "1.9.3", 
+        "bundle_id": "com.featherweightgames.stampede"
+    }, 
+    {
+        "app_name": "仙剑奇侠传3D回合—鲛珠传资料片庆周年", 
+        "release_date": "2016-11-08 16:40:11", 
+        "current_version_release_date": "2017-08-10 01:54:56", 
+        "app_id": 1173412177, 
+        "version": "4.0.7", 
+        "bundle_id": "com.gaeamobile.cn.xja2"
+    }
+]

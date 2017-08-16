@@ -64,13 +64,11 @@ def lookup_from_file(apps_path):
     for line in data:
         if not line:
             continue
-        line = line.strip()
-        args = line.split(' ')
-        app_info = None
+        args = line.strip().split(',')
         if len(args) != 2:
             print 'wrong line'
             continue
-        app_info = lookup(args[0], args[1])
+        app_info = lookup(args[0].strip(), args[1].strip())
         if app_info:
             app_infos.append(app_info)
         else:
@@ -86,7 +84,7 @@ def main(argv):
         return
     opts, args = getopt.getopt(argv, 'b:i:a:s:',
                                ['bundleId=', 'appId=', 'apps=', 'save='])
-    bundle_id = app_id = apps_path = save_path = None
+    bundle_id = app_id = apps_path = save_path = ''
     for opt, value in opts:
         if opt == '-b' or opt == '--bundleId':
             bundle_id = value
@@ -96,15 +94,18 @@ def main(argv):
             apps_path = value
         elif opt == '-s' or opt == '--save':
             save_path = value
+    app_infos = None
     if apps_path:
         app_infos = lookup_from_file(apps_path)
+    else:
+        app_info = lookup(bundle_id, app_id)
+        if app_info:
+            app_infos = [app_info]
+    if app_infos:
         if save_path:
             save_app_infos(app_infos, save_path)
         for app_info in app_infos:
             app_info.output_info()
-    else:
-        app_info = lookup(bundle_id, app_id)
-        app_info.output_info()
 
 
 if __name__ == '__main__':
