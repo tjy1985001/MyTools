@@ -26,10 +26,10 @@ def lookup(bundle_id, app_id):
     'retrieve data from App Store'
     print 'lookup: ', bundle_id, app_id
     json_data = None
-    if bundle_id:
-        json_data = send_request(LOOK_UP_BASE_URL + 'bundleId=' + bundle_id)
-    if app_id and not json_data:
+    if app_id:
         json_data = send_request(LOOK_UP_BASE_URL + 'id=' + app_id)
+    if bundle_id and not json_data:
+        json_data = send_request(LOOK_UP_BASE_URL + 'bundleId=' + bundle_id)
     if not json_data:
         return None
     app_info = AppInfo(json_data)
