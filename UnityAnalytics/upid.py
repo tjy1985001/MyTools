@@ -41,16 +41,34 @@ def get_upid(target):
     version = data.read(read_len)
     main_version = float(version[0:-4])
     upid = None
+    exp = ur'(([0-9a-z]+-){4}[0-9a-z]+)'
     errmsg = ''
     if main_version < 5.2:
         errmsg = 'not support'
     else:
-        exp = ur'(([0-9a-z]+-){4}[0-9a-z]+)'
         for line in data:
             ret = re.search(exp, line)
             if ret:
                 upid = ret.group(0)
                 break
+    if not upid and target.endswith(IPA_SUFFIX):
+        info_plist = None
+        for tmp in zip_file.namelist():
+            if re.match(ur'Payload[/\\].+\.app[/\\]Info.plist', tmp):
+                info_plist = tmp
+                break
+        if info_plist:
+            info_plist = zip_file.extract(info_plist, tmp_dir)
+            info_plist = open(info_plist)
+            is_upid = False
+            for line in info_plist:
+                if is_upid:
+                    ret = re.search(exp, line)
+                    upid = ret.group(0) if ret else None
+                    break
+                if 'UnityCloudProjectID' in line:
+                    is_upid = True
+            info_plist.close()
     if not upid:
         errmsg = 'cannot find upid'
     zip_file.close()
