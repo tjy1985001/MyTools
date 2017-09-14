@@ -12,6 +12,7 @@ import UnityAnalytics.upid as upid
 
 PACKAGE_NAMES = 'package_names.txt'
 APP_INFOS = 'apps.json'
+DIFF_INFORS = 'diff.json'
 
 
 def get_app_info(package_name):
@@ -81,7 +82,7 @@ def load_app_infos(app_infos_path):
 
 def save_app_infos(app_infos, app_infos_path):
     file_content = codecs.open(app_infos_path, 'w', encoding='utf-8')
-    file_content.write(json.dumps(app_infos, ensure_ascii=False, indent=4))
+    file_content.write(json.dumps(app_infos, ensure_ascii=False, indent=4, sort_keys=True))
     file_content.close()
 
 
@@ -100,9 +101,10 @@ def get_upid(app_info):
     return ua_info[2] if ua_info[2] else ua_info[3]
 
 
-def refresh(package_names_path, app_infos_path):
+def refresh(package_names_path, app_infos_path, diff_infors_path):
     file_content = open(package_names_path)
     old_app_infos = arr2dict(load_app_infos(app_infos_path), 'package name')
+    diff_infos = []
     changed = False
     for line in file_content:
         package_name = line.strip()
@@ -110,20 +112,30 @@ def refresh(package_names_path, app_infos_path):
         if old_app_infos.has_key(package_name):
             app_info['UPID'] = old_app_infos[package_name]['UPID']
             need_update = cmp(old_app_infos[package_name], app_info) != 0
+            old_info = old_app_infos[package_name]
         else:
             need_update = True
+            old_info = 'None'
         if need_update:
             app_info['UPID'] = get_upid(app_info)
             old_app_infos[package_name] = app_info
+            diff_infos.append({'Old': old_info, 'New': app_info})
             changed = True
     file_content.close()
     if changed:
         save_app_infos(old_app_infos.values(), app_infos_path)
+        save_app_infos(diff_infos, diff_infors_path)
 
 
-if __name__ == '__main__':
+def main():
     package_names_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), PACKAGE_NAMES)
     app_infos_path = os.path.join(
         os.path.dirname(os.path.realpath(__file__)), APP_INFOS)
-    refresh(package_names_path, app_infos_path)
+    diff_infors_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), DIFF_INFORS)
+    refresh(package_names_path, app_infos_path, diff_infors_path)
+
+
+if __name__ == '__main__':
+    main()
