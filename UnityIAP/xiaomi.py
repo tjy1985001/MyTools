@@ -7,12 +7,12 @@ import json
 import codecs
 import requests
 from bs4 import BeautifulSoup
-sys.path.append("..")
+sys.path.append(os.path.dirname(__file__) + "/..")
 import UnityAnalytics.upid as upid
 
-PACKAGE_NAMES = 'package_names.txt'
 APP_INFOS = 'apps.json'
 DIFF_INFORS = 'diff.json'
+CONFIGS_NAME = 'configs.json'
 
 
 def get_app_info(package_name):
@@ -41,10 +41,8 @@ def get_app_info(package_name):
     }
 
 
-def download_apk(package_name, app_id):
+def download_apk(package_name, app_id, apks_dir):
     url = 'http://app.mi.com/download/' + app_id
-    apks_dir = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), 'apks')
     if not os.path.exists(apks_dir):
         os.makedirs(apks_dir)
     apk_path = os.path.join(apks_dir, package_name + '.apk')
@@ -82,7 +80,8 @@ def load_app_infos(app_infos_path):
 
 def save_app_infos(app_infos, app_infos_path):
     file_content = codecs.open(app_infos_path, 'w', encoding='utf-8')
-    file_content.write(json.dumps(app_infos, ensure_ascii=False, indent=4, sort_keys=True))
+    file_content.write(
+        json.dumps(app_infos, ensure_ascii=False, indent=4, sort_keys=True))
     file_content.close()
 
 
@@ -93,21 +92,20 @@ def arr2dict(app_infos, key):
     return dic
 
 
-def get_upid(app_info):
-    apk_path = download_apk(app_info['package name'], app_info['app id'])
+def get_upid(app_info, apks_dir):
+    apk_path = download_apk(app_info['package name'], app_info['app id'],
+                            apks_dir)
     if not apk_path:
         print 'Download %s failed.' % app_info['package name']
     ua_info = upid.get_upid(apk_path)
     return ua_info[2] if ua_info[2] else ua_info[3]
 
 
-def refresh(package_names_path, app_infos_path, diff_infors_path):
-    file_content = open(package_names_path)
+def refresh(package_names, app_infos_path, diff_infors_path, apks_dir):
     old_app_infos = arr2dict(load_app_infos(app_infos_path), 'package name')
     diff_infos = []
     changed = False
-    for line in file_content:
-        package_name = line.strip()
+    for package_name in package_names:
         app_info = get_app_info(package_name)
         if old_app_infos.has_key(package_name):
             app_info['UPID'] = old_app_infos[package_name]['UPID']
@@ -117,24 +115,30 @@ def refresh(package_names_path, app_infos_path, diff_infors_path):
             need_update = True
             old_info = 'None'
         if need_update:
-            app_info['UPID'] = get_upid(app_info)
+            app_info['UPID'] = get_upid(app_info, apks_dir)
             old_app_infos[package_name] = app_info
             diff_infos.append({'Old': old_info, 'New': app_info})
             changed = True
-    file_content.close()
     if changed:
         save_app_infos(old_app_infos.values(), app_infos_path)
         save_app_infos(diff_infos, diff_infors_path)
 
 
 def main():
-    package_names_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), PACKAGE_NAMES)
-    app_infos_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), APP_INFOS)
-    diff_infors_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), DIFF_INFORS)
-    refresh(package_names_path, app_infos_path, diff_infors_path)
+    configs_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), CONFIGS_NAME)
+    configs_file = open(configs_path)
+    configs = json.load(configs_file)
+    configs_file.close()
+
+    data_dir = os.path.join(os.path.dirname(__file__), configs['data dir'])
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+    app_infos_path = os.path.join(data_dir, APP_INFOS)
+    diff_infors_path = os.path.join(data_dir, DIFF_INFORS)
+    apks_dir = os.path.join(data_dir, 'apks')
+    refresh(configs['package names'], app_infos_path, diff_infors_path,
+            apks_dir)
 
 
 if __name__ == '__main__':

@@ -1,3 +1,4 @@
 .vscode/
 *.pyc
 AppStoreUtils/data
+UnityIAP/data/
