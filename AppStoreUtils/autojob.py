@@ -6,7 +6,7 @@ import os
 import time
 import sys
 import check
-sys.path.append("..")
+sys.path.append(os.path.dirname(__file__) + "/..")
 import PyCommon.emailutils as email
 
 TO_ADDRS = ['']
