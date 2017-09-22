@@ -11,15 +11,11 @@ import getopt
 import appstore
 from appinfo import AppInfo
 
-DATA_DIR = 'test_data/'
-APP_INFO_SUFFIX = '.json'
 
-
-def load_new_app_infos(apps_path, current_time):
+def get_new_app_infos(configs_path, new_infos_path):
     'retrieve new data from App Store'
-    new_app_infos = appstore.lookup_from_file(apps_path)
-    file_path = DATA_DIR + current_time + APP_INFO_SUFFIX
-    appstore.save_app_infos(new_app_infos, file_path)
+    new_app_infos = appstore.lookup_from_configs(configs_path)
+    appstore.save_app_infos(new_app_infos, new_infos_path)
     return new_app_infos
 
 
@@ -29,8 +25,10 @@ def load_old_app_infos(old_data_path):
     try:
         if not old_data_path or not os.path.exists(old_data_path):
             return old_app_infos
-        json_data = json.loads(open(old_data_path).read())
-        old_app_infos = [AppInfo(tmp) for tmp in json_data]
+        app_infos_file = open(old_data_path)
+        app_infos = json.load(app_infos_file)
+        app_infos_file.close()
+        old_app_infos = [AppInfo(tmp) for tmp in app_infos]
     except Exception, ex:
         print 'load_old_app_infos: ', ex
     return old_app_infos
@@ -66,51 +64,60 @@ def compare(new_app_infos, old_app_infos):
     return result
 
 
-def save_result(result, current_time, old_data_path):
+def save_result(result, diff_infos_path, old_data_path):
     'save result to file as json'
-    if not result or not current_time:
+    if not result or not diff_infos_path:
         return None
     if not result['new'] and not result['update'] and not result['remove']:
         return None
     try:
-        save_path = DATA_DIR + 'diff-' + current_time + APP_INFO_SUFFIX
-        dir_path = os.path.dirname(save_path)
+        dir_path = os.path.dirname(diff_infos_path)
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-        save_file = codecs.open(save_path, 'w', encoding='utf-8')
+        save_file = codecs.open(diff_infos_path, 'w', encoding='utf-8')
         for key in list(result.keys()):
             result[key] = [app_info.__dict__ for app_info in result[key]]
         result['old app infos path'] = old_data_path
         save_file.write(json.dumps(result, indent=4, ensure_ascii=False))
         save_file.close()
-        return save_path
+        return diff_infos_path
     except Exception, ex:
         print 'save result failed.', ex
 
 
-def check(apps_path, old_data_path):
-    current_time = time.strftime('%Y-%m-%d %H.%M', time.localtime())
-    new_app_infos = load_new_app_infos(apps_path, current_time)
+def check(configs_path, old_data_path):
+    if not configs_path:
+        return None
+    configs_file = open(configs_path)
+    configs = json.load(configs_file)
+    configs_file.close()
+    data_dir = os.path.join(os.path.dirname(__file__), configs['data dir'])
+    file_name = time.strftime('%Y-%m-%d %H.%M', time.localtime()) + '.json'
+    new_infos_path = os.path.join(data_dir, file_name)
+    new_app_infos = get_new_app_infos(configs_path, new_infos_path)
     if not old_data_path:
         return None
     old_app_infos = load_old_app_infos(old_data_path)
-    result = compare(new_app_infos, old_app_infos)
-    return save_result(result, current_time, old_data_path)
+    diff_infos = compare(new_app_infos, old_app_infos)
+    if diff_infos:
+        diff_infos_path = os.path.join(data_dir, 'diff-' + file_name)
+        return save_result(diff_infos, diff_infos_path, old_data_path)
+    return None
 
 
 def main(argv):
     'main'
     if not argv:
         return
-    opts, args = getopt.getopt(argv, 'o:a:', ['old=', 'apps='])
+    opts, args = getopt.getopt(argv, 'o:c:', ['old=', 'configs='])
     old_data_path = None
-    apps_path = None
+    configs_path = None
     for opt, value in opts:
         if opt == '-o' or opt == '--old':
             old_data_path = value
-        elif opt == '-a' or opt == '--apps':
-            apps_path = value
-    checked_path = check(apps_path, old_data_path)
+        elif opt == '-c' or opt == '--configs':
+            configs_path = value
+    checked_path = check(configs_path, old_data_path)
     if checked_path:
         print 'The compared result was saved in %s' % checked_path
 

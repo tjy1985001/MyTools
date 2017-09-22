@@ -1,0 +1,13 @@
+{
+    "data dir": "",
+    "to_addrs": [],
+    "mail_host": "",
+    "mail_user": "",
+    "mail_pwd": "",
+    "apps": [
+        {
+            "bundle id": "com.shanggame.tfsgzlast",
+            "app id": "1229563961"
+        }
+    ]
+}

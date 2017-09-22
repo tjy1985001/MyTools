@@ -11,6 +11,8 @@ import requests
 from appinfo import AppInfo
 
 LOOK_UP_BASE_URL = 'https://itunes.apple.com/cn/lookup?'
+BUNDLE_ID = 'bundle id'
+APP_ID = 'app id'
 
 
 def send_request(url):
@@ -52,29 +54,25 @@ def save_app_infos(app_infos, save_path):
         print 'save app infos failed.', ex
 
 
-def lookup_from_file(apps_path):
+def lookup_from_configs(configs_path):
     'load bundle id and app id from file'
     app_infos = []
     try:
-        data = codecs.open(apps_path)
+        configs_file = codecs.open(configs_path)
     except Exception, ex:
         print ex
         return app_infos
 
-    for line in data:
-        if not line:
-            continue
-        args = line.strip().split(',')
-        if len(args) != 2:
-            print 'wrong line'
-            continue
-        app_info = lookup(args[0].strip(), args[1].strip())
+    configs = json.load(configs_file)
+    configs_file.close()
+    for config in configs['apps']:
+        bundle_id = config[BUNDLE_ID] if config.has_key(BUNDLE_ID) else None
+        app_id = config[APP_ID] if config.has_key(APP_ID) else None
+        app_info = lookup(bundle_id, app_id)
         if app_info:
             app_infos.append(app_info)
         else:
-            print 'lookup failed: %s' % line
-    data.close()
-
+            print 'lookup failed: %s, %s' % (bundle_id, app_id)
     return app_infos
 
 
@@ -82,21 +80,21 @@ def main(argv):
     'main'
     if not argv:
         return
-    opts, args = getopt.getopt(argv, 'b:i:a:s:',
-                               ['bundleId=', 'appId=', 'apps=', 'save='])
-    bundle_id = app_id = apps_path = save_path = ''
+    opts, args = getopt.getopt(argv, 'b:i:c:s:',
+                               ['bundleId=', 'appId=', 'configs=', 'save='])
+    bundle_id = app_id = configs_path = save_path = ''
     for opt, value in opts:
         if opt == '-b' or opt == '--bundleId':
             bundle_id = value
         elif opt == '-i' or opt == '--appId':
             app_id = value
-        elif opt == '-a' or opt == '--apps':
-            apps_path = value
+        elif opt == '-c' or opt == '--configs':
+            configs_path = value
         elif opt == '-s' or opt == '--save':
             save_path = value
     app_infos = None
-    if apps_path:
-        app_infos = lookup_from_file(apps_path)
+    if configs_path:
+        app_infos = lookup_from_configs(configs_path)
     else:
         app_info = lookup(bundle_id, app_id)
         if app_info:
