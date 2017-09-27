@@ -14,10 +14,13 @@ APP_INFOS = 'apps.json'
 DIFF_INFORS = 'diff.json'
 CONFIGS_NAME = 'configs.json'
 
+SESSION = requests.session()
+
 
 def get_app_info(package_name):
+    print 'get app info: ' + package_name
     url = 'http://app.mi.com/details?id=' + package_name
-    resp = requests.get(url=url)
+    resp = SESSION.get(url=url)
     soup = BeautifulSoup(resp.text, 'html.parser')
     intro = soup.select('div .intro-titles')[0].contents
     company = intro[0].contents[0]
@@ -50,7 +53,7 @@ def download_apk(package_name, app_id, apks_dir):
     while try_count > 0:
         try_count -= 1
         try:
-            resp = requests.get(url=url, stream=True)
+            resp = SESSION.get(url=url, stream=True)
             file_content = open(apk_path, 'wb')
             for chunk in resp.iter_content(chunk_size=1024):
                 if chunk:
