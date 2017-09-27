@@ -13,11 +13,11 @@ from appinfo import AppInfo
 LOOK_UP_BASE_URL = 'https://itunes.apple.com/cn/lookup?'
 BUNDLE_ID = 'bundle id'
 APP_ID = 'app id'
-
+SESSION = requests.session()
 
 def send_request(url):
     'send request'
-    resp = requests.get(url=url)
+    resp = SESSION.get(url=url)
     json_data = json.loads(resp.text, encoding=resp.encoding)
     if json_data['resultCount'] == 0:
         return None
