@@ -20,7 +20,9 @@ SESSION = requests.session()
 def get_app_info(package_name):
     print 'get app info: ' + package_name
     url = 'http://app.mi.com/details?id=' + package_name
-    resp = SESSION.get(url=url)
+    resp = SESSION.get(url=url, allow_redirects=False)
+    if resp.status_code != 200:
+        return None
     soup = BeautifulSoup(resp.text, 'html.parser')
     intro = soup.select('div .intro-titles')[0].contents
     company = intro[0].contents[0]
@@ -110,6 +112,10 @@ def refresh(package_names, app_infos_path, diff_infors_path, apks_dir):
     changed = False
     for package_name in package_names:
         app_info = get_app_info(package_name)
+        if not app_info:
+            diff_infos.append({'Old': old_app_infos[package_name], 'New': 'None'})
+            changed = True
+            continue
         if old_app_infos.has_key(package_name):
             app_info['UPID'] = old_app_infos[package_name]['UPID']
             need_update = cmp(old_app_infos[package_name], app_info) != 0
