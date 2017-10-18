@@ -40,8 +40,7 @@ def login(email, password):
             'conversations_create_session_form[remember_me]': 'false',
             'commit': 'Sign in'
         }
-        headers = {'Cookie': resp.headers['Set-Cookie']}
-        resp = session.post(url=url, data=data, headers=headers, verify=False)
+        resp = session.post(url=url, data=data, verify=False)
     except Exception, ex:
         print 'Step #%d failed: %s. Exception: %s' % (step, msg, ex)
         return None
