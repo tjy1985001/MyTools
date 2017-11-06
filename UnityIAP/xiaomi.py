@@ -5,22 +5,27 @@ import os
 import sys
 import json
 import codecs
+import threading
+from multiprocessing.dummy import Pool as ThreadPool
 import requests
 from bs4 import BeautifulSoup
 sys.path.append(os.path.dirname(__file__) + "/..")
 import UnityAnalytics.upid as upid
 
-APP_INFOS = 'apps.json'
-DIFF_INFORS = 'diff.json'
+APP_INFOS_NAME = 'apps.json'
+DIFF_INFORS_NAME = 'diff.json'
 CONFIGS_NAME = 'configs.json'
 
-SESSION = requests.session()
+LOCK = threading.Lock()
+LOCAL = threading.local()
+OLD_APP_INFOS = {}
+DIFF_INFORS = []
 
 
 def get_app_info(package_name):
     print 'get app info: ' + package_name
     url = 'http://app.mi.com/details?id=' + package_name
-    resp = SESSION.get(url=url, allow_redirects=False)
+    resp = LOCAL.SESSION.get(url=url, allow_redirects=False)
     if resp.status_code != 200:
         return None
     soup = BeautifulSoup(resp.text, 'html.parser')
@@ -55,7 +60,7 @@ def download_apk(package_name, app_id, apks_dir):
     while try_count > 0:
         try_count -= 1
         try:
-            resp = SESSION.get(url=url, stream=True)
+            resp = LOCAL.SESSION.get(url=url, stream=True)
             file_content = open(apk_path, 'wb')
             for chunk in resp.iter_content(chunk_size=1024):
                 if chunk:
@@ -107,27 +112,47 @@ def get_upid(app_info, apks_dir):
     return ua_info[2] if ua_info[2] else ua_info[3]
 
 
-def refresh(package_names, app_infos_path, diff_infos_path, apks_dir):
-    old_app_infos = arr2dict(load_app_infos(app_infos_path), 'package name')
-    diff_infos = []
-    for package_name in package_names:
-        app_info = get_app_info(package_name)
-        old_app_info = old_app_infos[package_name] if old_app_infos.has_key(package_name) else None
+def update_an_app(package_name, apks_dir):
+    global OLD_APP_INFOS
+    global DIFF_INFORS
+    if not LOCAL.__dict__.has_key('SESSION'):
+        LOCAL.SESSION = requests.session()
+    app_info = get_app_info(package_name)
+    try:
+        LOCK.acquire()
+        old_app_info = OLD_APP_INFOS[package_name] if OLD_APP_INFOS.has_key(package_name) else None
         if not app_info:
-            diff_infos.append({'Old': old_app_info, 'New': 'None'})
-            continue
-        need_update = True
-        if old_app_info:
-            app_info['UPID'] = old_app_info['UPID']
-            need_update = cmp(old_app_info, app_info) != 0
-        if need_update:
-            print package_name, 'has update'
-            app_info['UPID'] = get_upid(app_info, apks_dir)
-            old_app_infos[package_name] = app_info
-            diff_infos.append({'Old': old_app_info, 'New': app_info})
-    if diff_infos:
-        save_app_infos(old_app_infos.values(), app_infos_path)
-        save_app_infos(diff_infos, diff_infos_path)
+            DIFF_INFORS.append({'Old': old_app_info, 'New': 'None'})
+            return
+    finally:
+        LOCK.release()
+    need_update = True
+    if old_app_info:
+        app_info['UPID'] = old_app_info['UPID']
+        need_update = cmp(old_app_info, app_info) != 0
+    if need_update:
+        print package_name, 'has update'
+        app_info['UPID'] = get_upid(app_info, apks_dir)
+        try:
+            LOCK.acquire()
+            OLD_APP_INFOS[package_name] = app_info
+            DIFF_INFORS.append({'Old': old_app_info, 'New': app_info})
+        finally:
+            LOCK.release()
+
+
+def refresh(package_names, app_infos_path, diff_infos_path, apks_dir):
+    pool = ThreadPool()
+    global OLD_APP_INFOS
+    global DIFF_INFORS
+    OLD_APP_INFOS = arr2dict(load_app_infos(app_infos_path), 'package name')
+    for package_name in package_names:
+        pool.apply_async(update_an_app, (package_name, apks_dir))
+    pool.close()
+    pool.join()
+    if DIFF_INFORS:
+        save_app_infos(OLD_APP_INFOS.values(), app_infos_path)
+        save_app_infos(DIFF_INFORS, diff_infos_path)
 
 
 def main():
@@ -139,8 +164,8 @@ def main():
     data_dir = os.path.join(os.path.dirname(__file__), configs['data dir'])
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
-    app_infos_path = os.path.join(data_dir, APP_INFOS)
-    diff_infos_path = os.path.join(data_dir, DIFF_INFORS)
+    app_infos_path = os.path.join(data_dir, APP_INFOS_NAME)
+    diff_infos_path = os.path.join(data_dir, DIFF_INFORS_NAME)
     apks_dir = os.path.join(data_dir, 'apks')
     refresh(configs['package names'], app_infos_path, diff_infos_path,
             apks_dir)
