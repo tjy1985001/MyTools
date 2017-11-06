@@ -84,6 +84,7 @@ def load_app_infos(app_infos_path):
 
 
 def save_app_infos(app_infos, app_infos_path):
+    print 'save app infos:', len(app_infos), app_infos_path
     file_content = codecs.open(app_infos_path, 'w', encoding='utf-8')
     file_content.write(
         json.dumps(app_infos, ensure_ascii=False, indent=4, sort_keys=True))
@@ -106,36 +107,31 @@ def get_upid(app_info, apks_dir):
     return ua_info[2] if ua_info[2] else ua_info[3]
 
 
-def refresh(package_names, app_infos_path, diff_infors_path, apks_dir):
+def refresh(package_names, app_infos_path, diff_infos_path, apks_dir):
     old_app_infos = arr2dict(load_app_infos(app_infos_path), 'package name')
     diff_infos = []
-    changed = False
     for package_name in package_names:
         app_info = get_app_info(package_name)
+        old_app_info = old_app_infos[package_name] if old_app_infos.has_key(package_name) else None
         if not app_info:
-            diff_infos.append({'Old': old_app_infos[package_name], 'New': 'None'})
-            changed = True
+            diff_infos.append({'Old': old_app_info, 'New': 'None'})
             continue
-        if old_app_infos.has_key(package_name):
-            app_info['UPID'] = old_app_infos[package_name]['UPID']
-            need_update = cmp(old_app_infos[package_name], app_info) != 0
-            old_info = old_app_infos[package_name]
-        else:
-            need_update = True
-            old_info = 'None'
+        need_update = True
+        if old_app_info:
+            app_info['UPID'] = old_app_info['UPID']
+            need_update = cmp(old_app_info, app_info) != 0
         if need_update:
+            print package_name, 'has update'
             app_info['UPID'] = get_upid(app_info, apks_dir)
             old_app_infos[package_name] = app_info
-            diff_infos.append({'Old': old_info, 'New': app_info})
-            changed = True
-    if changed:
+            diff_infos.append({'Old': old_app_info, 'New': app_info})
+    if diff_infos:
         save_app_infos(old_app_infos.values(), app_infos_path)
-        save_app_infos(diff_infos, diff_infors_path)
+        save_app_infos(diff_infos, diff_infos_path)
 
 
 def main():
-    configs_path = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)), CONFIGS_NAME)
+    configs_path = os.path.join(os.path.dirname(__file__), CONFIGS_NAME)
     configs_file = open(configs_path)
     configs = json.load(configs_file)
     configs_file.close()
@@ -144,9 +140,9 @@ def main():
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     app_infos_path = os.path.join(data_dir, APP_INFOS)
-    diff_infors_path = os.path.join(data_dir, DIFF_INFORS)
+    diff_infos_path = os.path.join(data_dir, DIFF_INFORS)
     apks_dir = os.path.join(data_dir, 'apks')
-    refresh(configs['package names'], app_infos_path, diff_infors_path,
+    refresh(configs['package names'], app_infos_path, diff_infos_path,
             apks_dir)
 
 
