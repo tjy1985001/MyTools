@@ -7,7 +7,7 @@ from email.header import Header
 
 
 def send_email(mail_host, mail_user, mail_pwd, to_addrs, subject, content):
-    msg = MIMEText(content)
+    msg = MIMEText(content, _charset='utf-8')
     msg['Subject'] = Header(subject, 'utf-8')
     msg['From'] = mail_user
 
