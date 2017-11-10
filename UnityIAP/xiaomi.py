@@ -30,8 +30,10 @@ class XiaomiApps(object):
         configs = json.load(configs_file)
         configs_file.close()
 
-        self.package_names = configs['package names']
-        data_dir = os.path.join(os.path.dirname(__file__), configs['data dir'])
+        self.__package_names = [
+            tmp['xiaomi'] for tmp in configs['package_names']
+        ]
+        data_dir = os.path.join(os.path.dirname(__file__), configs['data_dir'])
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
         self.__app_infos_path = os.path.join(data_dir, self.app_infos_name)
@@ -159,7 +161,7 @@ class XiaomiApps(object):
         pool = ThreadPool()
         self.__old_app_infos = self.__arr2dict(self.__load_app_infos(),
                                                'package name')
-        pool.map(self.__update_an_app, self.package_names)
+        pool.map(self.__update_an_app, self.__package_names)
         pool.close()
         pool.join()
         if self.__diff_infos:

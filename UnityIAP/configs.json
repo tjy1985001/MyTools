@@ -1,4 +1,9 @@
 {
-    "data dir": "./data",
-    "package names": []
+    "data_dir": "./data",
+    "package_names": [
+        {
+            "xiaomi": "",
+            "google_play": ""
+        }
+    ]
 }
