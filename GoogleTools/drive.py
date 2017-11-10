@@ -67,7 +67,7 @@ class GoogleDrive(object):
         media = MediaFileUpload(file_path, resumable=True)
         uploaded_file = self.__google_service.files().create(
             body=file_metadata, media_body=media, fields='id').execute()
-        print 'File ID: %s' % uploaded_file.get('id')
+        return uploaded_file.get('id')
 
 
 def main():
