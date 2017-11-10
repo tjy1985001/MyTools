@@ -5,5 +5,10 @@
             "xiaomi": "",
             "google_play": ""
         }
-    ]
+    ],
+    "folder_id": "",
+    "to_addrs": [],
+    "mail_host": "",
+    "mail_user": "",
+    "mail_pwd": ""
 }
