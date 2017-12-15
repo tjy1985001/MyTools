@@ -45,7 +45,7 @@ def gen_csv(xm_apps, xm_gp):
     fields = [
         'APP_NAME', 'BUNDLEID', 'APPID', 'GENRE_XIAOMI', 'GENRE_GOOGLEPLAY'
     ]
-    csv_name = time.strftime('%Y-%m-%d %H.%M', time.localtime()) + '.csv'
+    csv_name = time.strftime('%Y-%m-%d', time.localtime()) + '.csv'
     csv_path = os.path.join(os.path.dirname(__file__), 'data', csv_name)
     csv_file = open(csv_path, 'wb')
     csv_file.write(codecs.BOM_UTF8)
@@ -77,7 +77,7 @@ def get_new_apps():
     diffs = json.load(diff_file)
     diff_file.close()
     new_apps = [
-        app['New'] for app in diffs if app['Old'] == 'None' and app['New']
+        app['New'] for app in diffs if not app['Old'] and app['New']
     ]
     return new_apps
 

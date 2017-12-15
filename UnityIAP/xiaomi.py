@@ -136,7 +136,7 @@ class XiaomiApps(object):
             old_app_info = self.__old_app_infos[package_name]\
                 if self.__old_app_infos.has_key(package_name) else None
             if not app_info:
-                self.__diff_infos.append({'Old': old_app_info, 'New': 'None'})
+                self.__diff_infos.append({'Old': old_app_info, 'New': None})
                 return
         finally:
             self.__lock.release()
