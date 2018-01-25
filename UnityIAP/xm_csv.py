@@ -10,7 +10,7 @@ import sys
 import time
 import codecs
 import unicodecsv as csv
-sys.path.append(os.path.dirname(__file__) + "/..")
+sys.path.append('..')
 from GoogleTools.gplay import GooglePlay
 from GoogleTools.drive import GoogleDrive
 import PyCommon.emailutils as email
@@ -42,9 +42,7 @@ def get_xiaomi_apps():
 
 
 def gen_csv(xm_apps, xm_gp):
-    fields = [
-        'APP_NAME', 'BUNDLEID', 'APPID', 'GENRE_XIAOMI', 'GENRE_GOOGLEPLAY'
-    ]
+    fields = ['APP_NAME', 'BUNDLEID', 'APPID', 'GENRE_XIAOMI', 'GENRE_GOOGLEPLAY']
     csv_name = time.strftime('%Y-%m-%d', time.localtime()) + '.csv'
     csv_path = os.path.join(os.path.dirname(__file__), 'data', csv_name)
     csv_file = open(csv_path, 'wb')
@@ -76,9 +74,7 @@ def get_new_apps():
     diff_file = open(diff_path)
     diffs = json.load(diff_file)
     diff_file.close()
-    new_apps = [
-        app['New'] for app in diffs if not app['Old'] and app['New']
-    ]
+    new_apps = [app['New'] for app in diffs if not app['Old'] and app['New']]
     return new_apps
 
 
@@ -89,9 +85,8 @@ def send_email(file_id, new_apps):
     content += '\n\nNew Apps:\n'
     for app in new_apps:
         content += '\t\t%s\t\t%s\n' % (app['app name'], app['package name'])
-    email.send_email(CONFIGS['mail_host'], CONFIGS['mail_user'],
-                     CONFIGS['mail_pwd'], CONFIGS['to_addrs'],
-                     'Xiaomi App Store Update', content)
+    email.send_email(CONFIGS['mail_host'], CONFIGS['mail_user'], CONFIGS['mail_pwd'],
+                     CONFIGS['to_addrs'], 'Xiaomi App Store Update', content)
 
 
 def main():
